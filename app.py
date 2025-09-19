@@ -8,6 +8,12 @@ import uvicorn
 from pdf_utils import extract_text_from_pdf, chunk_text
 from vector_store import VectorStore
 from mistral_client import ask_mistral
+from dotenv import load_dotenv
+from pathlib import Path
+
+env_path = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(dotenv_path=env_path)
+API_KEY = os.getenv("MISTRAL_API_KEY")
 
 app = FastAPI()
 sessions = {}
@@ -42,7 +48,7 @@ async def upload_pdf(file: UploadFile, session_id: str = Form(...)):
     text = extract_text_from_pdf(file_bytes)
     chunks = chunk_text(text)
 
-    vector_store = VectorStore()
+    vector_store = VectorStore(API_KEY)
     vector_store.build_index(chunks)
 
     # Save in session
