@@ -179,7 +179,10 @@ Message: {query}"""
         query_type = "general"
 
     # ----------------- Check if asking about PDF content when no PDF exists -----------------
-    pdf_content_keywords = ['pdf', 'document', 'file', 'inside', 'mentioned', 'name inside', 'experience', 'candidate']
+    pdf_content_keywords = [
+        'pdf', 'document', 'file', 'inside', 'mentioned', 'name inside', 'experience', 'candidate',
+        'author', 'writer', 'resume', 'cv', 'skills', 'qualification', 'education', 'work experience'
+    ]
     if vector_store is None and any(keyword in q_lower for keyword in pdf_content_keywords):
         return {"answer": "No PDF has been uploaded yet. Please upload a PDF first.", "memory": memory, "pdf_uploaded": False, "query_type": "general"}
     
@@ -195,9 +198,15 @@ Message: {query}"""
 
     # ----------------- Construct smart prompt -----------------
     # Determine if question is about document content
+    document_keywords = [
+        'document', 'pdf', 'file', 'text', 'mentioned', 'experience', 'he', 'she', 'person', 'candidate',
+        'author', 'writer', 'created', 'written', 'resume', 'cv', 'profile', 'skills', 'qualification',
+        'education', 'work', 'job', 'company', 'position', 'role', 'responsibility', 'achievement'
+    ]
+    
     is_document_question = (
         context_text and (
-            any(word in q_lower for word in ['document', 'pdf', 'file', 'text', 'mentioned', 'experience', 'he', 'she', 'person', 'candidate']) or
+            any(word in q_lower for word in document_keywords) or
             not any(word in q_lower for word in ['my', 'i am', 'i have', 'me'])
         )
     )
