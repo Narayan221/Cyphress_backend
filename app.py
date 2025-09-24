@@ -186,6 +186,25 @@ Message: {query}"""
     if vector_store is None and any(keyword in q_lower for keyword in pdf_content_keywords):
         return {"answer": "No PDF has been uploaded yet. Please upload a PDF first.", "memory": memory, "pdf_uploaded": False, "query_type": "general"}
     
+    # ----------------- Word counting queries -----------------
+    word_count_patterns = ['how many times', 'how much time', 'count of', 'frequency of', 'occurrences of']
+    if vector_store is not None and any(pattern in q_lower for pattern in word_count_patterns):
+        # For word counting, we need the full document text
+        if hasattr(vector_store, 'chunks'):
+            full_text = ' '.join(vector_store.chunks)
+        else:
+            # Fallback to getting all chunks
+            all_chunks = vector_store.get_relevant_chunks(query, top_k=100)  # Get more chunks
+            full_text = ' '.join(all_chunks)
+        
+        # Extract the word to count from the query
+        import re
+        word_match = re.search(r'\b(\w+)\b.*?(?:word|been used)', query, re.IGNORECASE)
+        if word_match:
+            target_word = word_match.group(1).lower()
+            count = full_text.lower().count(target_word)
+            return {"answer": f"The word '{target_word}' appears {count} times in the document.", "memory": memory, "pdf_uploaded": True, "query_type": "general"}
+    
     # ----------------- PDF context -----------------
     if vector_store is not None and hasattr(vector_store, "get_relevant_chunks"):
         relevant_chunks = vector_store.get_relevant_chunks(query)
