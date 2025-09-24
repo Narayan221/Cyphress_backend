@@ -199,11 +199,25 @@ Message: {query}"""
         
         # Extract the word to count from the query
         import re
-        word_match = re.search(r'\b(\w+)\b.*?(?:word|been used)', query, re.IGNORECASE)
-        if word_match:
-            target_word = word_match.group(1).lower()
+        # Look for patterns like "reproduction word" or "reproduction been used"
+        word_patterns = [
+            r'(\w+)\s+(?:word|been used)',  # "reproduction word" or "reproduction been used"
+            r'times\s+(\w+)\s+',           # "times reproduction "
+            r'(?:how many times|how much time)\s+(\w+)',  # "how many times reproduction"
+        ]
+        
+        target_word = None
+        for pattern in word_patterns:
+            match = re.search(pattern, query, re.IGNORECASE)
+            if match:
+                target_word = match.group(1).lower()
+                break
+        
+        if target_word:
             count = full_text.lower().count(target_word)
             return {"answer": f"The word '{target_word}' appears {count} times in the document.", "memory": memory, "pdf_uploaded": True, "query_type": "general"}
+        else:
+            return {"answer": "I couldn't identify which word you want me to count.", "memory": memory, "pdf_uploaded": True, "query_type": "general"}
     
     # ----------------- PDF context -----------------
     if vector_store is not None and hasattr(vector_store, "get_relevant_chunks"):
